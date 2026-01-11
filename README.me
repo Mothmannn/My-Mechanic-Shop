@@ -1,0 +1,93 @@
+Features
+
+Customer CRUD – Create, read, update, and delete customers.
+
+Mechanic CRUD – Create, read, update, and delete mechanics.
+
+Service Ticket Management – Create and manage service tickets.
+
+Mechanic Assignment – Assign or remove mechanics from service tickets.
+
+Built using the Application Factory Pattern for modularity and scalability.
+
+Tech Stack
+
+Python
+
+Flask – Web framework
+
+Marshmallow – Serialization and validation
+
+Postman – API testing
+
+Installation
+
+Clone the repository:
+
+git clone https://github.com/Mothmannn/My-Mechanic-Shop.git
+cd My-Mechanic-Shop
+
+
+Create a virtual environment and activate it:
+
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# macOS/Linux
+source venv/bin/activate
+
+
+Install dependencies:
+
+pip install flask flask-sqlalchemy mysql-connector-python
+pip install flask-marshmallow, marshmallow-sqlalchemy
+
+Usage
+Customers
+Method	Endpoint	Description
+POST	/customers	Create a new customer
+GET	/customers	Get all customers
+GET	/customers/<int:customer_id>	Get a specific customer by ID
+PUT	/customers/<int:customer_id>	Update a customer by ID
+DELETE	/customers/<int:customer_id>	Delete a customer by ID
+
+Mechanics
+Method	Endpoint	Description
+POST	/mechanics	Create a new mechanic
+GET	/mechanics	Get all mechanics
+PUT	/mechanics/<int:id>	Update a mechanic by ID
+DELETE	/mechanics/<int:id>	Delete a mechanic by ID
+
+Service Tickets
+Method	Endpoint	Description
+POST	/services	Create a new service ticket
+GET	/services	Get all service tickets
+PUT	/services/<ticket_id>/assign-mechanic/<mechanic_id>	Assign a mechanic to a service ticket
+PUT	/services/<ticket_id>/remove-mechanic/<mechanic_id>	Remove a mechanic from a service ticket
+
+Relationship Management
+
+Service tickets can have multiple mechanics assigned.
+
+Use assign-mechanic to add a mechanic to the ticket.
+
+Use remove-mechanic to remove a mechanic from the ticket.
+
+This is managed through SQLAlchemy relationships, allowing each service ticket to maintain a list of mechanics.
+
+
+Testing
+
+Use Postman to test all endpoints.
+
+Example workflow:
+
+Create a customer (POST /customers)
+
+Create a mechanic (POST /mechanics)
+
+Create a service ticket (POST /services)
+
+Assign a mechanic (PUT /services/<ticket_id>/assign-mechanic/<mechanic_id>)
+
+Retrieve tickets (GET /services)
