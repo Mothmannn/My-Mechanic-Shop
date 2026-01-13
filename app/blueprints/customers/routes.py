@@ -68,15 +68,6 @@ def get_customers():
         customers = db.session.execute(query).scalars().all()
         return customers_schema.jsonify(customers), 200
 
-#GET SPECIFIC CUSTOMER
-@customers_bp.route("/<int:customer_id>", methods=['GET'])
-def get_customer(customer_id):
-    customer = db.session.get(Customer, customer_id)
-
-    if customer:
-        return customer_schema.jsonify(customer), 200
-    return jsonify({"error": "Customer not found."}), 404
-
 # Update a Customer
 @customers_bp.route("/", methods=['PUT'])
 @token_required
@@ -110,3 +101,11 @@ def delete_customer(customer_id):
     db.session.commit()
     return jsonify({"message": f"succesfully deleted user {customer_id}"})
 
+#GET SPECIFIC CUSTOMER
+# @customers_bp.route("/<int:customer_id>", methods=['GET'])
+# def get_customer(customer_id):
+#     customer = db.session.get(Customer, customer_id)
+
+#     if customer:
+#         return customer_schema.jsonify(customer), 200
+#     return jsonify({"error": "Customer not found."}), 404

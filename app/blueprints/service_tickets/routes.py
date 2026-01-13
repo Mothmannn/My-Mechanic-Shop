@@ -12,8 +12,13 @@ from app.models import Mechanic, Service, Customer, Inventory, db
 #@limiter.limit("1 per 3 minutes")
 @token_required
 def create_service(customer_id):
+    payload = request.get_json() or {}
+
+    # Inject customer_id from token
+    payload["customer_id"] = customer_id
+
     try:
-        service = service_schema.load(request.json)
+        service = service_schema.load(payload)
     except ValidationError as e:
         return jsonify(e.messages), 400
 
@@ -25,6 +30,7 @@ def create_service(customer_id):
         select(Service).where(
             Service.VIN == service.VIN,
             Service.service_date == service.service_date,
+            Service.service_desc == service.service_desc,
             Service.customer_id == customer_id
         )
     ).scalar_one_or_none()
@@ -37,52 +43,6 @@ def create_service(customer_id):
     db.session.commit()
 
     return service_schema.jsonify(service), 201
-
-# Assign a mechanic to a service ticket
-# @services_bp.route("/<int:ticket_id>/assign-mechanic/<int:mechanic_id>", methods=['PUT'])
-# @token_required
-# def assign_mechanic(customer_id, ticket_id, mechanic_id):
-#     ticket = db.session.get(Service, ticket_id)
-#     if not ticket:
-#         return {"error": "Service ticket not found"}, 404
-    
-#     if ticket.customer_id != customer_id:
-#         return {"error": "Unauthorized access to this service ticket"}, 403
-    
-#     mechanic = db.session.get(Mechanic, mechanic_id)
-#     if not mechanic:
-#         return {"error": "Mechanic not found"}, 404
-    
-#     if mechanic in ticket.mechanics:
-#         return {"error": "Mechanic already assigned to this ticket"}, 400
-    
-#     ticket.mechanics.append(mechanic)
-#     db.session.commit()
-
-#     return service_schema.jsonify(ticket), 200
-
-# Remove a mechanic from a service ticket
-# @services_bp.route("/<int:ticket_id>/remove-mechanic/<int:mechanic_id>", methods=['PUT'])
-# @token_required
-# def remove_mechanic(customer_id, ticket_id, mechanic_id):
-#     ticket = db.session.get(Service, ticket_id)
-#     if not ticket:
-#         return {"error": "Service ticket not found"}, 404
-    
-#     if ticket.customer_id != customer_id:
-#         return {"error": "Unauthorized access to this service ticket"}, 403
-    
-#     mechanic = db.session.get(Mechanic, mechanic_id)
-#     if not mechanic:
-#         return {"error": "Mechanic not found"}, 404
-    
-#     if mechanic not in ticket.mechanics:
-#         return {"error": "Mechanic is not assigned to this ticket"}, 400
-    
-#     ticket.mechanics.remove(mechanic)
-#     db.session.commit()
-
-#     return service_schema.jsonify(ticket), 200
 
 # Get all service tickets
 @services_bp.route("/", methods=['GET'])
@@ -245,3 +205,49 @@ def search_service_tickets():
     query = select(Service).where(Service.VIN.like(f'%{vin_query}%'))
     services = db.session.execute(query).scalars().all()
     return services_schema.jsonify(services), 200
+
+# Assign a mechanic to a service ticket
+# @services_bp.route("/<int:ticket_id>/assign-mechanic/<int:mechanic_id>", methods=['PUT'])
+# @token_required
+# def assign_mechanic(customer_id, ticket_id, mechanic_id):
+#     ticket = db.session.get(Service, ticket_id)
+#     if not ticket:
+#         return {"error": "Service ticket not found"}, 404
+    
+#     if ticket.customer_id != customer_id:
+#         return {"error": "Unauthorized access to this service ticket"}, 403
+    
+#     mechanic = db.session.get(Mechanic, mechanic_id)
+#     if not mechanic:
+#         return {"error": "Mechanic not found"}, 404
+    
+#     if mechanic in ticket.mechanics:
+#         return {"error": "Mechanic already assigned to this ticket"}, 400
+    
+#     ticket.mechanics.append(mechanic)
+#     db.session.commit()
+
+#     return service_schema.jsonify(ticket), 200
+
+# Remove a mechanic from a service ticket
+# @services_bp.route("/<int:ticket_id>/remove-mechanic/<int:mechanic_id>", methods=['PUT'])
+# @token_required
+# def remove_mechanic(customer_id, ticket_id, mechanic_id):
+#     ticket = db.session.get(Service, ticket_id)
+#     if not ticket:
+#         return {"error": "Service ticket not found"}, 404
+    
+#     if ticket.customer_id != customer_id:
+#         return {"error": "Unauthorized access to this service ticket"}, 403
+    
+#     mechanic = db.session.get(Mechanic, mechanic_id)
+#     if not mechanic:
+#         return {"error": "Mechanic not found"}, 404
+    
+#     if mechanic not in ticket.mechanics:
+#         return {"error": "Mechanic is not assigned to this ticket"}, 400
+    
+#     ticket.mechanics.remove(mechanic)
+#     db.session.commit()
+
+#     return service_schema.jsonify(ticket), 200

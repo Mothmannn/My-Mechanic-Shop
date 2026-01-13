@@ -56,7 +56,6 @@ def update_mechanic(mechanic_id):
 
 # Delete a mechanic
 @mechanics_bp.route("/<int:mechanic_id>", methods=['DELETE'])
-@token_required
 def delete_mechanic(customer_id, mechanic_id):
     mechanic = db.session.get(Mechanic, mechanic_id)
 
@@ -72,6 +71,11 @@ def service_leaderboard():
     query = select(Mechanic)
     mechanics = db.session.execute(query).scalars().all()
 
-    mechanics.sort(key=lambda mechanic: len(mechanic.service_tickets), reverse=True )
+    # # update the assignments mapped column from the relationship count, persist to DB
+    # for mech in mechanics:
+    #     mech.assignments = len(mech.service_tickets) if mech.service_tickets else 0
+    # db.session.commit()
+
+    mechanics.sort(key=lambda mechanic: mechanic.assignments, reverse=True )
 
     return mechanics_schema.jsonify(mechanics), 200

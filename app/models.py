@@ -1,7 +1,8 @@
 
 from typing import List
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import func, select
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, column_property
 from datetime import date
 from sqlalchemy.types import Float
 
@@ -58,6 +59,12 @@ class Mechanic(Base):
     email: Mapped[str] = mapped_column(db.String(360), nullable=False, unique=True)
     phone: Mapped[str] = mapped_column(db.String(360), nullable=False, unique=True)
     salary: Mapped[float] = mapped_column(Float, nullable=False)
+    assignments: Mapped[int] = column_property(
+        select(func.count(service_mechanics.c.ticket_id))
+        .where(service_mechanics.c.mechanic_id == id)
+        .correlate_except(service_mechanics)
+        .scalar_subquery()
+    )
 
     service_tickets: Mapped[List['Service']] = db.relationship(secondary=service_mechanics, back_populates='mechanics')
 

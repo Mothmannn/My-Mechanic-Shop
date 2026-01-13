@@ -12,7 +12,7 @@ class MechanicNameOnlySchema(ma.SQLAlchemyAutoSchema):
         load_instance = True
 
 class ServiceSchema(ma.SQLAlchemyAutoSchema):
-    customer_id = fields.Int(required=True)
+    customer_id = fields.Int(load_only=True)
     mechanics = fields.Nested(MechanicSchema, many=True)
     inventory = fields.Nested('app.blueprints.inventory.schemas.InventorySchema', many=True)
     #mechanics = fields.Nested(MechanicNameOnlySchema, many=True)
@@ -20,14 +20,11 @@ class ServiceSchema(ma.SQLAlchemyAutoSchema):
         model = Service
         load_instance = True
         fields=("id", "VIN", "service_date", "service_desc", "customer_id", "mechanics", "inventory")
-        exclude = ("service_date",)
         include_fk=True
 
 class EditMechanicsServiceSchema(ma.Schema):
     add_mechanic_ids = fields.List(fields.Int())
     remove_mechanic_ids = fields.List(fields.Int())
-    add_parts_ids = fields.List(fields.Int())
-    remove_parts_ids = fields.List(fields.Int())
 
     @validates_schema
     def validate_mechanic_ids(self, data, **kwargs):
