@@ -1,3 +1,4 @@
+from app.utils.util import token_required
 from .schemas import mechanic_schema, mechanics_schema
 from app.models import Mechanic
 from marshmallow import ValidationError
@@ -5,9 +6,11 @@ from flask import request, jsonify
 from app.models import db
 from sqlalchemy import select
 from . import mechanics_bp
+from app.extensions import limiter, cache
 
 # Create a new mechanic
 @mechanics_bp.route("/", methods=['POST'])
+#@limiter.limit("5 per day")
 def create_mechanic():
     try:
         mechanic_data = mechanic_schema.load(request.json)
@@ -26,6 +29,7 @@ def create_mechanic():
 
 # Get all mechanics
 @mechanics_bp.route("/", methods=['GET'])
+@cache.cached(timeout=60)
 def get_mechanics():
     query= select(Mechanic)
     mechanics = db.session.execute(query).scalars().all()
@@ -51,7 +55,8 @@ def update_mechanic(mechanic_id):
     return mechanic_schema.jsonify(mechanic), 200
 
 # Delete a mechanic
-@mechanics_bp.route("/<int:mechanic_id>", methods=['DELETE'])
+@mechanics_bp.route("/", methods=['DELETE'])
+@token_required
 def delete_mechanic(mechanic_id):
     mechanic = db.session.get(Mechanic, mechanic_id)
 
@@ -61,3 +66,12 @@ def delete_mechanic(mechanic_id):
     db.session.delete(mechanic)
     db.session.commit()
     return jsonify({"message": f'mechanic id: {mechanic_id}, successfully deleted.'}), 200
+
+@mechanics_bp.route("/service-leaderboard", methods=['GET'])
+def service_leaderboard():
+    query = select(Mechanic)
+    mechanics = db.session.execute(query).scalars().all()
+
+    mechanics.sort(key=lambda mechanic: len(mechanic.service_tickets), reverse=True )
+
+    return mechanics_schema.jsonify(mechanics), 200
