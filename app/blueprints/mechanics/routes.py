@@ -55,14 +55,14 @@ def update_mechanic(mechanic_id):
     return mechanic_schema.jsonify(mechanic), 200
 
 # Delete a mechanic
-@mechanics_bp.route("/", methods=['DELETE'])
+@mechanics_bp.route("/<int:mechanic_id>", methods=['DELETE'])
 @token_required
-def delete_mechanic(mechanic_id):
+def delete_mechanic(customer_id, mechanic_id):
     mechanic = db.session.get(Mechanic, mechanic_id)
 
     if not mechanic:
         return jsonify({"error": "mechanic not found."}), 404
-    
+
     db.session.delete(mechanic)
     db.session.commit()
     return jsonify({"message": f'mechanic id: {mechanic_id}, successfully deleted.'}), 200
