@@ -8,6 +8,14 @@ Service Ticket Management – Create and manage service tickets.
 
 Mechanic Assignment – Assign or remove mechanics from service tickets.
 
+New / Updated Features
+- Edit mechanics on a service ticket via bulk lists: `PUT /service-tickets/<service_id>/edit-mechanics` accepts `add_mechanic_ids` and/or `remove_mechanic_ids` (both optional but at least one required).
+- Edit parts on a service ticket via bulk lists: `PUT /service-tickets/<service_id>/edit-parts` accepts `add_parts_ids` and/or `remove_parts_ids` (both optional but at least one required).
+- Validation: schema-level validation enforces that at least one of the add/remove lists is present for edits; requests return `400` on validation errors.
+- Inventory existence check: when editing parts, the API verifies requested part IDs exist in inventory and returns `404` listing any missing part IDs.
+- Inventory listing: the inventory GET endpoint supports pagination and returns lists correctly (uses plural schema for lists).
+- Authorization: some routes require a token and receive `customer_id` from the `@token_required` decorator (e.g., deleting a mechanic requires auth).
+
 Built using the Application Factory Pattern for modularity and scalability.
 
 Tech Stack
@@ -56,24 +64,42 @@ Method	Endpoint	Description
 POST	/mechanics	Create a new mechanic
 GET	/mechanics	Get all mechanics
 PUT	/mechanics/<int:id>	Update a mechanic by ID
-DELETE	/mechanics/<int:id>	Delete a mechanic by ID
+DELETE	/mechanics/<int:id>	Delete a mechanic by ID (requires authentication)
+
+
+Inventory
+Method	Endpoint	Description
+POST	/inventory	Create a new inventory part (checks for duplicate `part_name` and returns 400 if already exists)
+GET	/inventory	Get all inventory parts (supports pagination via `page` and `per_page`; cached)
+GET	/inventory/<int:inventory_id>	Get a specific inventory part by ID (cached)
+PUT	/inventory/<int:inventory_id>	Update an inventory part by ID (rate-limited)
+DELETE	/inventory/<int:inventory_id>	Delete an inventory part by ID (rate-limited)
+
+Inventory Notes
+- Creation checks: `POST /inventory` validates request body via `inventory_schema` and rejects duplicate `part_name`.
+- Pagination: `GET /inventory` returns paginated results when `page` is provided; otherwise returns all parts.
+- Caching: `GET /inventory` and `GET /inventory/<id>` are configured with cache decorators in the codebase.
+- Rate limits: update and delete endpoints are rate-limited in code (see decorators).
+- Authentication: current code does not require authentication on inventory write endpoints by default (check route decorators in `app/blueprints/inventory/routes.py`).
 
 Service Tickets
 Method	Endpoint	Description
-POST	/services	Create a new service ticket
-GET	/services	Get all service tickets
-PUT	/services/<ticket_id>/assign-mechanic/<mechanic_id>	Assign a mechanic to a service ticket
-PUT	/services/<ticket_id>/remove-mechanic/<mechanic_id>	Remove a mechanic from a service ticket
+POST	/service-tickets	Create a new service ticket
+GET	/service-tickets	Get all service tickets (supports pagination)
+PUT	/service-tickets/<service_id>/edit-mechanics	Bulk edit mechanics on a ticket using `add_mechanic_ids` and/or `remove_mechanic_ids`
+PUT	/service-tickets/<service_id>/edit-parts	Bulk edit parts on a ticket using `add_parts_ids` and/or `remove_parts_ids` (validates part existence)
 
 Relationship Management
 
-Service tickets can have multiple mechanics assigned.
+Service tickets can have multiple mechanics and multiple inventory parts assigned.
 
-Use assign-mechanic to add a mechanic to the ticket.
+Use the bulk edit endpoints (`edit-mechanics`, `edit-parts`) to add or remove multiple IDs in a single request. The implementation replaces the relationship with the computed desired set of related objects (fetched fresh from the database).
 
-Use remove-mechanic to remove a mechanic from the ticket.
+Validation notes:
+- When editing mechanics or parts, the request schema accepts lists of integers. At least one of the add/remove lists must be present.
+- Editing parts performs an existence check and will return `404` with `missing_part_ids` if any requested parts don't exist.
 
-This is managed through SQLAlchemy relationships, allowing each service ticket to maintain a list of mechanics.
+This is managed through SQLAlchemy relationships, allowing each service ticket to maintain lists of mechanics and parts.
 
 
 Testing
