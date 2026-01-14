@@ -101,19 +101,43 @@ Validation notes:
 
 This is managed through SQLAlchemy relationships, allowing each service ticket to maintain lists of mechanics and parts.
 
-
 Testing
 
-Use Postman to test all endpoints.
+Automated tests are included under the tests/ directory and cover:
+- Customer endpoints (creation, login, update with token).
+- Mechanic endpoints (creation and validation).
+- Inventory endpoints (create and update).
+- Service ticket endpoints (validation and ticket workflows).
 
-Example workflow:
+Run tests (Windows):
 
-Create a customer (POST /customers)
+venv\Scripts\activate
+# run all tests with pytest (recommended) or unittest
+python -m pytest -q
+# or using unittest discovery
+python -m unittest discover -v tests
 
-Create a mechanic (POST /mechanics)
+Run a single test file:
+python -m pytest tests/test_inventory.py -q
 
-Create a service ticket (POST /services)
+Notes:
+- Tests use the app TestingConfig via create_app('TestingConfig').
+- The DB is dropped/created in setUp for isolation; ensure no external DB is in use when running tests.
 
-Assign a mechanic (PUT /services/<ticket_id>/assign-mechanic/<mechanic_id>)
+Swagger API Documentation
 
-Retrieve tickets (GET /services)
+A full OpenAPI/Swagger spec is included at:
+app/static/swagger.yaml
+
+Quick ways to view the documentation:
+- Swagger Editor (no install): open https://editor.swagger.io/ and paste the contents of app/static/swagger.yaml or upload the file.
+- Local Swagger UI via Docker:
+  docker run --rm -p 8080:8080 -e SWAGGER_JSON=/foo/swagger.yaml -v "%cd%/app/static":/foo swaggerapi/swagger-ui
+  Then open http://localhost:8080
+- Serve statically from the Flask app: the YAML is available at app/static/swagger.yaml; you can point a Swagger UI instance to http://127.0.0.1:5000/static/swagger.yaml when the app is running.
+
+Contributing / Notes
+
+- Use Postman or automated tests to validate endpoints.
+- Check route decorators for authentication, caching, and rate-limiting behaviours.
+- For API contract changes update app/static/swagger.yaml to keep docs in sync.
