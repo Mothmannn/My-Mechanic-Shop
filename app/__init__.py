@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, redirect, url_for
 from .extensions import ma, limiter
 from .models import db
 from .blueprints.customers import customers_bp
@@ -28,6 +28,11 @@ def create_app(config_name):
     db.init_app(app)
     limiter.init_app(app)
     cache.init_app(app)
+
+    #Root route - redirect to Swagger UI
+    @app.route('/')
+    def index():
+        return redirect('/api/docs')
 
     #Register Blueprints
     app.register_blueprint(customers_bp, url_prefix='/customers' )
