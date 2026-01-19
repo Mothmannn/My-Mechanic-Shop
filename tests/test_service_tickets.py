@@ -61,3 +61,5 @@ class TestService(unittest.TestCase):
         with self.app.app_context():
             count = db.session.query(Service).count()
         self.assertEqual(count, 0)
+
+        #testing
